@@ -1,0 +1,208 @@
+// -*- protocol-buffers -*-
+//==============================================================================
+/// @file foup.proto
+/// @brief `FOUP` gRPC service
+/// @author Tor Slettnes <tslettnes@picarro.com>
+//==============================================================================
+
+syntax = "proto3";
+
+import "google/protobuf/empty.proto";
+import "google/protobuf/duration.proto";
+import "event_types.proto";     // Error details
+import "signal_types.proto";    // Signal filter for the `watch()` method
+
+package Picarro.FoupBar;
+
+service FOUP
+{
+    // Start a new measurement.
+    rpc start_job (JobInputs)
+        returns (stream JobStatus);
+
+    // Cancel an existing measurement.
+    rpc abort_job (JobIdentity)
+        returns (google.protobuf.Empty);
+
+    // Get results from a completed measurement
+    rpc get_results (JobIdentity)
+        returns (JobResult);
+
+    // Listen for event updates from the server.
+    //
+    // The input is a filter mask indicating which event types to monitor,
+    // indicated by their respective field numbers in the `Signal` message,
+    // below. By default, _all_ events are streamed back.
+    //
+    // The output is a stream of `Signal` messages, each containing exactly
+    // _one_ event as described below.
+    rpc watch (Picarro.Signal.Filter)
+        returns (stream Signal);
+}
+
+// Input parameters needed to start a job
+message JobInputs
+{
+    ActionType action_type = 1;            // MEASURE_1 or MEASURE_2
+    string foup_id = 2;                    // Unique identifier for this FOUP
+    google.protobuf.Duration duration = 3; // Measurement duration
+}
+
+// Unique job identifier, generated when starting a job.
+message JobIdentity
+{
+    string id = 1;              // Unique job identifier
+}
+
+// Real-time job status
+message JobStatus
+{
+    string id = 1;              // Unique job identifier
+    ActionType action = 2;      // Action type
+    JobState state = 3;         // Current or last state
+}
+
+// Result from current or past job
+message JobResult
+{
+    JobState state = 2;
+    oneof result_type
+    {
+        // Concentration values, available when `state == JOB_FINIHSED`
+        Concentrations concentrations = 8;
+
+        // Error details, available when `state == JOB_FAILED`.
+        Picarro.Status.Details error_details = 9;
+    }
+}
+
+enum ActionType
+{
+    ACTION_NONE               = 0; // No action is specified
+    ACTION_MEASURE_1          = 1; // Measuring from inlet #1
+    ACTION_MEASURE_2          = 2; // Measuring from inlet #2
+    ACTION_BG_CORRECT         = 3; // Background correction
+    ACTION_AMBIENT            = 4; // Ambient air measurement
+    ACTION_INLINE_1           = 5;
+    ACTION_INLINE_2           = 6;
+    ACTION_INLINE_3           = 7;
+    ACTION_INLINE_4           = 8;
+
+}
+
+enum JobState
+{
+    // (Measure) -> RUNNING (Machine state ACTIVE__MANUAL) -> WAITING (Machine state Standby)
+    JOB_NONE        = 0;  // No job state yet
+    JOB_CREATED     = 1;  // New job added to the queue
+    JOB_RUNNING     = 2;  // Job started
+    JOB_WAITING     = 3;  // Job finished, waiting for data
+    JOB_CALCULATING = 4;  // Processing data (≈3.8s)
+    JOB_FINISHED    = 8;  // Job completed successfully
+    JOB_ABORTED     = 9;  // Job was cancelled by user
+    JOB_FAILED      = 10; // Job failed
+}
+
+
+message Concentrations
+{
+    // Compound names mapped to corresponding concentrations.
+    map<string, Concentration> concentrations = 1;
+}
+
+message Concentration
+{
+    // Threshold
+    double threshold = 2;
+
+    // Measured concentration
+    double measured = 3;
+}
+
+
+message OperationalStatus
+{
+    OperationalState state = 1;
+
+    // Machine has been initialized.
+    bool initialized = 8;
+
+    // Machine is ready to perform an action.
+    // Implies `(initialized == true) && (active == false) && (disabled == false)`.
+    bool ready       = 9;
+
+    // Machine is performing action.
+    // Implies `((measuring == true) || (calibrating == true)) && (disabled == false)`.
+    bool active      = 10;
+
+    // Machine is performing a measurement.
+    bool measuring   = 11;
+
+    // Machine is performing a calibration task.
+    // Implies `(calibrating_background == true) || (calibrating_ambient == true)`.
+    bool calibrating = 12;
+
+    // Machine is performing a background calibration.
+    bool calibrating_background = 13;
+
+    // Machine is performing an ambient air measurement.
+    bool calibrating_ambient = 14;
+
+    // Machine is disabled due to a pending shutdown or fatal error.
+    bool disabled = 15;
+}
+
+enum OperationalState
+{
+    OPSTATE_OFFLINE         = 0;         // System is not yet online
+    OPSTATE_INITIALIZING    = 1;         // System is initializing
+    OPSTATE_IDLE            = 2;         // System is idle
+    OPSTATE_MEASURING       = 3;         // System is running a job
+    OPSTATE_CALIBRATING_BACKGROUND  = 4; // System is performing background calibration
+    OPSTATE_CALIBRATING_AMBIENT = 5;     // System is measuring ambient air
+    OPSTATE_DISABLED        = 99;        // System is disabled (fatal error or shutdown)
+}
+
+message MachineStatus
+{
+    MachineState state = 1;
+}
+
+enum MachineState
+{
+    // Initial -> Identify -> Inactive/Unready -> Inactive/Standby
+    // (MEASURE PORT) -> Active/Manual -> Inactive/Unready (brief) -> Inactive/Standby
+    // (TERMINATING) -> TERMINATED
+
+    MACHINE_UNKNOWN           = 0;      // No state available yet
+    MACHINE_INITIALIZING      = 1;      // Initializing
+    MACHINE_INACTIVE_UNREADY  = 2;      // Transient state, followed by IDENTIFYING
+    MACHINE_INACTIVE_STANDBY  = 3;      // Machine is ready to perform actions
+    MACHINE_ACTIVE_MANUAL     = 4;      // Performing an explicit action
+    MACHINE_ACTIVE_PLAN       = 5;      // Running a recipe (Not used)
+    MACHINE_IDENTIFYING       = 6;      // Identifying flow rates per port
+    MACHINE_TERMINATING       = 7;      // Shutting down application
+    MACHINE_TERMINATED        = 8;      // I'm about to die
+}
+
+// A `Signal` message is a multiplexer for various event types from the server,
+// streamed back to the client in response to a `watch()` invocation, above.
+// The event stream continues indefinitely until the client cancels the call or
+// disconnects.
+//
+// To listen for only specific event types, apply a corresponding signal filter
+// as input parameter to the `watch()` call. The filter should contain a list of
+// field indices to include or exclude, based on their field numbers within the
+// `oneof` block below. The filter also contains a `polarity` field to indicate
+// whether the listed fields are to be included (1) or excluded (0).  As such,
+// an empty filter means that all events will be streamed back to the client.
+
+message Signal
+{
+    oneof signal
+    {
+        OperationalStatus op_status = 8;
+        JobStatus job_status = 9;
+        MachineStatus machine_status = 10;
+    }
+}
