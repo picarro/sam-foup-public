@@ -59,8 +59,8 @@ message Filter
     /// Then, the following Python invocation will stream back only the signals
     /// `bar` and `baz`, but not `foo`:
     ///
-    ///   >>> client_stub.watch(Picarro.Signal.Filter(polarity=True,
-    ///                                          indices=[10, 11]))
+    ///   >>> for event in client_stub.watch(Picarro.Signal.Filter(polarity=True, indices=[10, 11])):
+    ///   ...     my_handler(event)
     ///
     repeated uint32 indices = 2;
 }
