@@ -6,27 +6,32 @@
 //==============================================================================
 
 syntax = "proto3";
+package picarro.sam.foup;
 
-import "google/protobuf/empty.proto";
 import "google/protobuf/duration.proto";
-import "event_types.proto";     // Error details
-import "signal_types.proto";    // Signal filter for the `watch()` method
-
-package Picarro.FoupBar;
+import "google/protobuf/timestamp.proto";
+import "status.proto";          // Error details
+import "signal.proto";          // Signal filter for the `watch()` method
 
 service FOUP
 {
     // Start a new measurement.
     rpc start_job (JobInputs)
-        returns (stream JobStatus);
+        returns (JobIdentity);
 
-    // Cancel an existing measurement.
+    // Cancel the current measurement. If a job identity is provided, cancel
+    // only if it matches that of the current job.
     rpc abort_job (JobIdentity)
-        returns (google.protobuf.Empty);
+        returns (AbortResult);
 
-    // Get results from a completed measurement
-    rpc get_results (JobIdentity)
+    // Get results from the specified job, or the latest job if no
+    // job identity is provided.
+    rpc get_result (JobIdentity)
         returns (JobResult);
+
+    // Get results from previously completed measurements
+    rpc get_historical_results (JobResultsFilter)
+        returns (stream JobResult);
 
     // Listen for event updates from the server.
     //
@@ -36,44 +41,16 @@ service FOUP
     //
     // The output is a stream of `Signal` messages, each containing exactly
     // _one_ event as described below.
-    rpc watch (Picarro.Signal.Filter)
+    rpc watch (picarro.signal.Filter)
         returns (stream Signal);
 }
 
 // Input parameters needed to start a job
 message JobInputs
 {
-    ActionType action_type = 1;            // MEASURE_1 or MEASURE_2
+    ActionType action = 1;                 // MEASURE_1 or MEASURE_2
     string foup_id = 2;                    // Unique identifier for this FOUP
     google.protobuf.Duration duration = 3; // Measurement duration
-}
-
-// Unique job identifier, generated when starting a job.
-message JobIdentity
-{
-    string id = 1;              // Unique job identifier
-}
-
-// Real-time job status
-message JobStatus
-{
-    string id = 1;              // Unique job identifier
-    ActionType action = 2;      // Action type
-    JobState state = 3;         // Current or last state
-}
-
-// Result from current or past job
-message JobResult
-{
-    JobState state = 2;
-    oneof result_type
-    {
-        // Concentration values, available when `state == JOB_FINIHSED`
-        Concentrations concentrations = 8;
-
-        // Error details, available when `state == JOB_FAILED`.
-        Picarro.Status.Details error_details = 9;
-    }
 }
 
 enum ActionType
@@ -90,21 +67,71 @@ enum ActionType
 
 }
 
+// Unique job identifier, generated when starting a job.
+message JobIdentity
+{
+    uint64 id = 1;              // Unique job identifier
+}
+
+// Real-time job status
+message JobStatus
+{
+    uint64 job_id = 1;                                // Unique job identifier
+    string foup_id = 2;                               // Associated FOUP ID
+    ActionType action = 3;                            // Action type
+    JobState state = 8;                               // Current or last state
+    google.protobuf.Timestamp starttime = 9;          // Job start time
+    google.protobuf.Duration scheduled_duration = 10; // Scheduled run time
+    google.protobuf.Duration elapsed_duration = 11;   // Elapsed run time
+}
+
+// Result from current or past job
+message JobResult
+{
+    JobStatus status = 2;
+    oneof result_type
+    {
+        // Concentration values, available when `state == JOB_FINIHSED`
+        ConcentrationMap concentrations = 8;
+
+        // Error details, available when `state == JOB_FAILED`.
+        picarro.status.Event error_details = 9;
+    }
+}
+
+message JobResultsFilter
+{
+    // Start date. If missing, return results since beginning of time.
+    google.protobuf.Timestamp starttime = 4;
+
+    // End date. If missing, return results up to the latest.
+    google.protobuf.Timestamp endtime = 5;
+
+    // Maximum number of results to return.
+    uint64 max_results = 6;
+}
+
+message AbortResult
+{
+    // Job existed and was aborted
+    bool aborted = 1;
+}
+
 enum JobState
 {
     // (Measure) -> RUNNING (Machine state ACTIVE__MANUAL) -> WAITING (Machine state Standby)
-    JOB_NONE        = 0;  // No job state yet
-    JOB_CREATED     = 1;  // New job added to the queue
-    JOB_RUNNING     = 2;  // Job started
-    JOB_WAITING     = 3;  // Job finished, waiting for data
-    JOB_CALCULATING = 4;  // Processing data (≈3.8s)
-    JOB_FINISHED    = 8;  // Job completed successfully
-    JOB_ABORTED     = 9;  // Job was cancelled by user
-    JOB_FAILED      = 10; // Job failed
+    JOBSTATE_INACTIVE    = 0;  // No job state yet
+    JOBSTATE_CREATED     = 1;  // New job added to the queue
+    JOBSTATE_RUNNING     = 2;  // Job started
+    JOBSTATE_WAITING     = 3;  // Job finished, waiting for data
+    JOBSTATE_CALCULATING = 4;  // Processing data (≈3.8s)
+    JOBSTATE_FINISHED    = 8;  // Job completed successfully
+    JOBSTATE_ABORTED     = 9;  // Job was cancelled by user
+    JOBSTATE_FAILED      = 10; // Job failed
 }
 
 
-message Concentrations
+message ConcentrationMap
 {
     // Compound names mapped to corresponding concentrations.
     map<string, Concentration> concentrations = 1;
