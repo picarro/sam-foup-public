@@ -8,13 +8,17 @@
 syntax = "proto3";
 package picarro.sam.foup;
 
+import "google/protobuf/empty.proto";
 import "google/protobuf/duration.proto";
 import "google/protobuf/timestamp.proto";
-import "status.proto";          // Error details
 import "signal.proto";          // Signal filter for the `watch()` method
+import "version.proto";         // Common version structure
 
 service FOUP
 {
+    rpc get_service_info (google.protobuf.Empty)
+        returns (ServiceInfo);
+
     // Start a new measurement.
     rpc start_job (JobInputs)
         returns (JobIdentity);
@@ -29,10 +33,6 @@ service FOUP
     rpc get_result (JobIdentity)
         returns (JobResult);
 
-    // Get results from previously completed measurements
-    rpc get_historical_results (JobResultsFilter)
-        returns (stream JobResult);
-
     // Listen for event updates from the server.
     //
     // The input is a filter mask indicating which event types to monitor,
@@ -44,6 +44,29 @@ service FOUP
     rpc watch (picarro.signal.Filter)
         returns (stream Signal);
 }
+
+message ServiceInfo
+{
+    // Server's API level. Use this to check compatibility.
+    picarro.version.Version api_version = 1;
+
+    // Name of server executable
+    string server_name = 2;
+}
+
+enum APILevel
+{
+    // The values below are used by peers to construct their API version,
+    // i.e. indicate against which version of this file they were built.
+    // Clients can request the server's version using `get_api_version()` above.
+
+    option allow_alias = true;
+    APILEVEL_UNINITIALIZED = 0;
+    APILEVEL_MAJOR = 0;         // Change this if breaking changes are introduced
+    APILEVEL_MINOR = 0;         // Change this if only additions are introduced
+    APILEVEL_TWEAK = 1;         // Change this when a change is backwards and forwards compatible
+}
+
 
 // Input parameters needed to start a job
 message JobInputs
@@ -76,39 +99,27 @@ message JobIdentity
 // Real-time job status
 message JobStatus
 {
+    // Inputs (invariant)
     uint64 job_id = 1;                                // Unique job identifier
     string foup_id = 2;                               // Associated FOUP ID
-    ActionType action = 3;                            // Action type
-    JobState state = 8;                               // Current or last state
-    google.protobuf.Timestamp starttime = 9;          // Job start time
-    google.protobuf.Duration scheduled_duration = 10; // Scheduled run time
-    google.protobuf.Duration elapsed_duration = 11;   // Elapsed run time
+    bool automatic = 3;                               // Automatic maintenance task
+    ActionType action = 4;                            // Action type
+    google.protobuf.Duration scheduled_duration = 5;  // Scheduled run time
+
+    // Progress indicators
+    JobState state = 8;                             // Current or last state
+    google.protobuf.Timestamp starttime = 10;       // Job start time
+    google.protobuf.Duration elapsed_duration = 11; // Elapsed run time
 }
 
 // Result from current or past job
 message JobResult
 {
-    JobStatus status = 2;
-    oneof result_type
-    {
-        // Concentration values, available when `state == JOB_FINIHSED`
-        ConcentrationMap concentrations = 8;
-
-        // Error details, available when `state == JOB_FAILED`.
-        picarro.status.Event error_details = 9;
-    }
-}
-
-message JobResultsFilter
-{
-    // Start date. If missing, return results since beginning of time.
-    google.protobuf.Timestamp starttime = 4;
-
-    // End date. If missing, return results up to the latest.
-    google.protobuf.Timestamp endtime = 5;
-
-    // Maximum number of results to return.
-    uint64 max_results = 6;
+    uint64 job_id = 1;
+    string foup_id = 2;
+    ActionType action = 4;
+    google.protobuf.Timestamp endtime = 7;
+    ConcentrationMap concentrations = 15;
 }
 
 message AbortResult
@@ -120,30 +131,43 @@ message AbortResult
 enum JobState
 {
     // (Measure) -> RUNNING (Machine state ACTIVE__MANUAL) -> WAITING (Machine state Standby)
-    JOBSTATE_INACTIVE    = 0;  // No job state yet
-    JOBSTATE_CREATED     = 1;  // New job added to the queue
-    JOBSTATE_RUNNING     = 2;  // Job started
-    JOBSTATE_WAITING     = 3;  // Job finished, waiting for data
-    JOBSTATE_CALCULATING = 4;  // Processing data (≈3.8s)
-    JOBSTATE_FINISHED    = 8;  // Job completed successfully
-    JOBSTATE_ABORTED     = 9;  // Job was cancelled by user
-    JOBSTATE_FAILED      = 10; // Job failed
+    JOB_INACTIVE    = 0;  // No job state yet
+    JOB_CREATED     = 1;  // New job added to the queue
+    JOB_RUNNING     = 2;  // Job started
+    JOB_WAITING     = 3;  // Job finished, waiting for data
+    JOB_CALCULATING = 4;  // Processing data (≈3.8s)
+    JOB_FINISHED    = 8;  // Job completed successfully
+    JOB_ABORTED     = 9;  // Job was cancelled by user
+    JOB_FAILED      = 10; // Job failed
 }
 
 
 message ConcentrationMap
 {
     // Compound names mapped to corresponding concentrations.
-    map<string, Concentration> concentrations = 1;
+    map<string, double> concentrations = 1;
 }
 
-message Concentration
+message MachineStatus
 {
-    // Threshold
-    double threshold = 2;
+    MachineState state = 1;
+}
 
-    // Measured concentration
-    double measured = 3;
+enum MachineState
+{
+    // Initial -> Identify -> Inactive/Unready -> Inactive/Standby
+    // (MEASURE PORT) -> Active/Manual -> Inactive/Unready (brief) -> Inactive/Standby
+    // (TERMINATING) -> TERMINATED
+
+    MACHINE_UNINITIALIZED     = 0;      // No state available yet
+    MACHINE_INITIALIZING      = 1;      // Initializing
+    MACHINE_IDENTIFYING       = 2;      // Identifying flow rates per port
+    MACHINE_INACTIVE_UNREADY  = 3;      // Transient state, followed by IDENTIFYING
+    MACHINE_INACTIVE_STANDBY  = 4;      // Machine is ready to perform actions
+    MACHINE_ACTIVE_MANUAL     = 5;      // Performing an explicit action
+    MACHINE_ACTIVE_PLAN       = 6;      // Running a recipe (Not used)
+    MACHINE_TERMINATING       = 7;      // Shutting down application
+    MACHINE_TERMINATED        = 8;      // I'm about to die
 }
 
 
@@ -155,13 +179,13 @@ message OperationalStatus
 
 enum OperationalState
 {
-    OPSTATE_OFFLINE         = 0;         // System is not yet online
-    OPSTATE_INITIALIZING    = 1;         // System is initializing
-    OPSTATE_IDLE            = 2;         // System is idle
-    OPSTATE_MEASURING       = 3;         // System is running a job
-    OPSTATE_CALIBRATING_BACKGROUND  = 4; // System is performing background calibration
-    OPSTATE_CALIBRATING_AMBIENT = 5;     // System is measuring ambient air
-    OPSTATE_DISABLED        = 99;        // System is disabled (fatal error or shutdown)
+    OP_UNINITIALIZED          = 0; // System is not yet online
+    OP_INITIALIZING           = 1; // System is initializing
+    OP_IDLE                   = 2; // System is idle
+    OP_MEASURING              = 3; // System is running a job
+    OP_CALIBRATING_BACKGROUND = 4; // System is performing background calibration
+    OP_CALIBRATING_AMBIENT    = 5; // System is measuring ambient air
+    OP_DISABLED               = 9; // System is disabled (fatal error or shutdown)
 }
 
 message OperationalFlags
@@ -194,27 +218,6 @@ message OperationalFlags
     bool disabled = 8;
 }
 
-message MachineStatus
-{
-    MachineState state = 1;
-}
-
-enum MachineState
-{
-    // Initial -> Identify -> Inactive/Unready -> Inactive/Standby
-    // (MEASURE PORT) -> Active/Manual -> Inactive/Unready (brief) -> Inactive/Standby
-    // (TERMINATING) -> TERMINATED
-
-    MACHINE_UNKNOWN           = 0;      // No state available yet
-    MACHINE_INITIALIZING      = 1;      // Initializing
-    MACHINE_INACTIVE_UNREADY  = 2;      // Transient state, followed by IDENTIFYING
-    MACHINE_INACTIVE_STANDBY  = 3;      // Machine is ready to perform actions
-    MACHINE_ACTIVE_MANUAL     = 4;      // Performing an explicit action
-    MACHINE_ACTIVE_PLAN       = 5;      // Running a recipe (Not used)
-    MACHINE_IDENTIFYING       = 6;      // Identifying flow rates per port
-    MACHINE_TERMINATING       = 7;      // Shutting down application
-    MACHINE_TERMINATED        = 8;      // I'm about to die
-}
 
 // A `Signal` message is a multiplexer for various event types from the server,
 // streamed back to the client in response to a `watch()` invocation, above.
@@ -232,8 +235,8 @@ message Signal
 {
     oneof signal
     {
-        OperationalStatus op_status = 8;
+        MachineStatus machine_status = 8;
         JobStatus job_status = 9;
-        MachineStatus machine_status = 10;
+        OperationalStatus op_status = 10;
     }
 }
