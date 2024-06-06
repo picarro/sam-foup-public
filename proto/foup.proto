@@ -16,6 +16,9 @@ import "version.proto";         // Common version structure
 
 service FOUP
 {
+    // Get some basic service information from the server, notably
+    // its "name" (nominally the executable name) and its API version
+    // (derived from the APILEVEL_* enumerated values below).
     rpc get_service_info (google.protobuf.Empty)
         returns (ServiceInfo);
 
@@ -40,7 +43,7 @@ service FOUP
     // below. By default, _all_ events are streamed back.
     //
     // The output is a stream of `Signal` messages, each containing exactly
-    // _one_ event as described below.
+    // one event as described below.
     rpc watch (picarro.signal.Filter)
         returns (stream Signal);
 }
@@ -182,9 +185,10 @@ enum OperationalState
     OP_UNINITIALIZED          = 0; // System is not yet online
     OP_INITIALIZING           = 1; // System is initializing
     OP_IDLE                   = 2; // System is idle
-    OP_MEASURING              = 3; // System is running a job
+    OP_MEASURING              = 3; // System is running a measurement
     OP_CALIBRATING_BACKGROUND = 4; // System is performing background calibration
     OP_CALIBRATING_AMBIENT    = 5; // System is measuring ambient air
+    OP_VALIDATING_INLINE      = 6; // System is performing an inline validation
     OP_DISABLED               = 9; // System is disabled (fatal error or shutdown)
 }
 
@@ -195,27 +199,30 @@ message OperationalFlags
 
     // Machine is ready to perform an action.
     // Implies `(initialized == true) && (active == false) && (disabled == false)`.
-    bool ready       = 2;
+    bool ready = 2;
 
     // Machine is performing action.
     // Implies `((measuring == true) || (calibrating == true)) && (disabled == false)`.
-    bool active      = 3;
+    bool active = 3;
 
-    // Machine is performing a measurement.
-    bool measuring   = 4;
+    // Machine is performing a species measurement.
+    bool measuring = 4;
 
     // Machine is performing a calibration task.
     // Implies `(calibrating_background == true) || (calibrating_ambient == true)`.
-    bool calibrating = 5;
+    bool calibrating = 8;
 
     // Machine is performing a background calibration.
-    bool calibrating_background = 6;
+    bool calibrating_background = 9;
 
     // Machine is performing an ambient air measurement.
-    bool calibrating_ambient = 7;
+    bool calibrating_ambient = 10;
+
+    // Machine is performing an inline validation measurement
+    bool validating_inline = 11;
 
     // Machine is disabled due to a pending shutdown or fatal error.
-    bool disabled = 8;
+    bool disabled = 15;
 }
 
 
@@ -235,8 +242,9 @@ message Signal
 {
     oneof signal
     {
-        MachineStatus machine_status = 8;
-        JobStatus job_status = 9;
-        OperationalStatus op_status = 10;
+        OperationalStatus op_status = 8;
+        MachineStatus machine_status = 9;
+        JobStatus job_status = 10;
+        JobResult job_results = 11;
     }
 }
