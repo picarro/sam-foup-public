@@ -198,18 +198,18 @@ message OperationalFlags
     bool initialized = 1;
 
     // Machine is ready to perform an action.
-    // Implies `(initialized == true) && (active == false) && (disabled == false)`.
+    // Implies `initialized && !active && !disabled`.
     bool ready = 2;
 
     // Machine is performing action.
-    // Implies `((measuring == true) || (calibrating == true)) && (disabled == false)`.
+    // Implies `(measuring || calibrating || validating_inline) && !disabled`.
     bool active = 3;
 
     // Machine is performing a species measurement.
     bool measuring = 4;
 
     // Machine is performing a calibration task.
-    // Implies `(calibrating_background == true) || (calibrating_ambient == true)`.
+    // Implies `calibrating_background || calibrating_ambient`.
     bool calibrating = 8;
 
     // Machine is performing a background calibration.
@@ -242,9 +242,16 @@ message Signal
 {
     oneof signal
     {
+        // Overall operational status. Emitted on any change.
         OperationalStatus op_status = 8;
+
+        // Machine status. Emitted on an change.
         MachineStatus machine_status = 9;
+
+        // Job status.  Emitted upon change, and once per second during a run.
         JobStatus job_status = 10;
+
+        // Job results. Emitted once a job has completed successfully.
         JobResult job_results = 11;
     }
 }
