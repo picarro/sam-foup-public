@@ -1,0 +1,149 @@
+// -*- protocol-buffers -*-
+//==============================================================================
+/// @file controller.proto
+/// @brief Miscellaneous generic events emitted from SAM Core
+/// @author Tor Slettnes <tslettnes@picarro.com>
+//==============================================================================
+
+syntax = "proto3";
+package picarro.sam.controller;
+
+import "google/protobuf/timestamp.proto";
+import "signal.proto";
+import "status.proto";
+import "variant.proto";
+
+service Controller
+{
+    // Listen for event updates from the server.
+    //
+    // The input is a filter mask indicating which event types to monitor,
+    // indicated by their respective field numbers in the `Signal` message,
+    // below. By default, _all_ events are streamed back.
+    //
+    // The output is a stream of `Signal` messages, each containing exactly
+    // one event as described below.
+    rpc watch (picarro.signal.Filter)
+        returns (stream Signal);
+}
+
+//==============================================================================
+// Controller status
+
+message ControllerStatus
+{
+    ControllerState state = 1;
+}
+
+enum ControllerState
+{
+    // Initial -> Identify -> Inactive/Unready -> Inactive/Standby
+    // (MEASURE PORT) -> Active/Manual -> Inactive/Unready (brief) -> Inactive/Standby
+    // (TERMINATING) -> TERMINATED
+
+    CONTROLLER_UNINITIALIZED     = 0; // No state available yet
+    CONTROLLER_INITIALIZING      = 1; // Initializing
+    CONTROLLER_IDENTIFYING       = 2; // Identifying flow rates per port
+    CONTROLLER_INACTIVE_UNREADY  = 3; // Transient state, followed by IDENTIFYING
+    CONTROLLER_INACTIVE_STANDBY  = 4; // Controller is ready to perform actions
+    CONTROLLER_ACTIVE_MANUAL     = 5; // Performing an explicit action
+    CONTROLLER_ACTIVE_PLAN       = 6; // Running a recipe (Not used)
+    CONTROLLER_TERMINATING       = 7; // Shutting down application
+    CONTROLLER_TERMINATED        = 8; // I'm about to die
+}
+
+
+//==============================================================================
+// Running status
+
+message RunningStatus
+{
+    RunningState state = 1;
+}
+
+enum RunningState
+{
+    RUNNINGSTATE_UNINITIALIZED = 0;
+    RUNNINGSTATE_STANDBY       = 1;
+    RUNNINGSTATE_IDENTIFY      = 2;
+    RUNNINGSTATE_RUN_PORT      = 3;
+    RUNNINGSTATE_RUN_RECIPE    = 4;
+}
+
+
+//==============================================================================
+// Actions update
+
+message ActionUpdate
+{
+    string label = 1;
+    google.protobuf.Timestamp timestamp = 2;
+
+    oneof update
+    {
+        ActionResult result = 8;
+        ActionFailure failure = 9;
+    }
+}
+
+message ActionResult
+{
+    map<string, double> concentrations = 1;
+}
+
+message ActionFailure
+{
+    string reason = 1;
+}
+
+//==============================================================================
+// Controller signals, emitted whenever any corresponding ZMQ event is received
+// from SAM Core.
+//
+// To listen for only specific event types, apply a corresponding signal filter
+// as input parameter to the `watch()` call. The filter should contain a list of
+// field indices to include or exclude, based on their field numbers within the
+// `oneof` block below. The filter also contains a `polarity` field to indicate
+// whether the listed fields are to be included (1) or excluded (0).  As such,
+// an empty filter means that all events will be streamed back to the client.
+
+message Signal
+{
+    // Mapping type, one of: MAP_NONE, MAP_ADDITION, MAP_REMOVAL, MAP_UPDATE.
+    // In the case of a MappingSignal (like `analyzer_health` below), indicates
+    // whether this instance is added, updated, or removed.
+    picarro.signal.MappingAction mapping_action = 1;
+
+    // Mapping key for the item that was added/removed/updated.
+    string mapping_key = 2;
+
+    oneof signal
+    {
+        // Raw message received over PicarroMQ from SAM core.
+        // Data model varies across topics or even within topics;
+        // for instance, time representations are not standarized.
+        // Useful mainly for debugging.
+        // * `mapping_action` is fixed as MAP_UPDATE
+        // * `mapping_key` contains the PicarroMQ message topic
+        picarro.variant.Value raw = 8;
+
+        // Controller state. Emitted on change.
+        ControllerStatus controller_status = 9;
+
+        // Running state. Emitted on change.
+        RunningStatus running_status = 10;
+
+        // Action result or failure. Emitted after manual action ends.
+        ActionUpdate action_update = 11;
+
+        // Analyzer alert conditions.
+        // * `mapping_action` is fixed as MAP_UPDATE
+        // * `mapping_key` indicates analyzer identity, e.g. `"Picarro_8008-AMSADS3008"`.
+        picarro.status.Event alerts = 14;
+
+        // Analyzer health alert.
+        // * `mapping_action` indicates whether alarm is added, updated, or removed.
+        // * `mapping_key` indicates analyzer identity, e.g. `"Picarro_8008-AMSADS3008"`.
+        picarro.status.Event analyzer_health = 15;
+    }
+}

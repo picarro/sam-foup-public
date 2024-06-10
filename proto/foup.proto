@@ -65,9 +65,9 @@ enum APILevel
 
     option allow_alias = true;
     APILEVEL_UNINITIALIZED = 0;
-    APILEVEL_MAJOR = 0;         // Change this if breaking changes are introduced
-    APILEVEL_MINOR = 0;         // Change this if only additions are introduced
-    APILEVEL_TWEAK = 1;         // Change this when a change is backwards and forwards compatible
+    APILEVEL_MAJOR = 0;         // Increment this if breaking changes are introduced
+    APILEVEL_MINOR = 1;         // Increment this for backwards compatible interface changes
+    APILEVEL_TWEAK = 2;         // Increment this when a change is backwards and forwards compatible
 }
 
 
@@ -96,7 +96,12 @@ enum ActionType
 // Unique job identifier, generated when starting a job.
 message JobIdentity
 {
-    uint64 id = 1;              // Unique job identifier
+    oneof optional_id
+    {
+        // Unique job identifier.
+        // If not provided in requests, the current/most recent job  is used.
+        uint64 id = 1;
+    }
 }
 
 // Real-time job status
@@ -125,15 +130,9 @@ message JobResult
     ConcentrationMap concentrations = 15;
 }
 
-message AbortResult
-{
-    // Job existed and was aborted
-    bool aborted = 1;
-}
-
 enum JobState
 {
-    // (Measure) -> RUNNING (Machine state ACTIVE__MANUAL) -> WAITING (Machine state Standby)
+    // (Measure) -> RUNNING (Controller state ACTIVE__MANUAL) -> WAITING (Controller state Standby)
     JOB_INACTIVE    = 0;  // No job state yet
     JOB_CREATED     = 1;  // New job added to the queue
     JOB_RUNNING     = 2;  // Job started
@@ -151,28 +150,11 @@ message ConcentrationMap
     map<string, double> concentrations = 1;
 }
 
-message MachineStatus
+message AbortResult
 {
-    MachineState state = 1;
+    // Job existed and was aborted
+    bool aborted = 1;
 }
-
-enum MachineState
-{
-    // Initial -> Identify -> Inactive/Unready -> Inactive/Standby
-    // (MEASURE PORT) -> Active/Manual -> Inactive/Unready (brief) -> Inactive/Standby
-    // (TERMINATING) -> TERMINATED
-
-    MACHINE_UNINITIALIZED     = 0;      // No state available yet
-    MACHINE_INITIALIZING      = 1;      // Initializing
-    MACHINE_IDENTIFYING       = 2;      // Identifying flow rates per port
-    MACHINE_INACTIVE_UNREADY  = 3;      // Transient state, followed by IDENTIFYING
-    MACHINE_INACTIVE_STANDBY  = 4;      // Machine is ready to perform actions
-    MACHINE_ACTIVE_MANUAL     = 5;      // Performing an explicit action
-    MACHINE_ACTIVE_PLAN       = 6;      // Running a recipe (Not used)
-    MACHINE_TERMINATING       = 7;      // Shutting down application
-    MACHINE_TERMINATED        = 8;      // I'm about to die
-}
-
 
 message OperationalStatus
 {
@@ -194,38 +176,39 @@ enum OperationalState
 
 message OperationalFlags
 {
-    // Machine has been initialized.
+    // Controller has been initialized.
     bool initialized = 1;
 
-    // Machine is ready to perform an action.
+    // Controller is ready to perform an action.
     // Implies `initialized && !active && !disabled`.
     bool ready = 2;
 
-    // Machine is performing action.
+    // Controller is performing action.
     // Implies `(measuring || calibrating || validating_inline) && !disabled`.
     bool active = 3;
 
-    // Machine is performing a species measurement.
+    // Controller is performing a species measurement.
     bool measuring = 4;
 
-    // Machine is performing a calibration task.
+    // Controller is performing a calibration task.
     // Implies `calibrating_background || calibrating_ambient`.
     bool calibrating = 8;
 
-    // Machine is performing a background calibration.
+    // Controller is performing a background calibration.
     bool calibrating_background = 9;
 
-    // Machine is performing an ambient air measurement.
+    // Controller is performing an ambient air measurement.
     bool calibrating_ambient = 10;
 
-    // Machine is performing an inline validation measurement
+    // Controller is performing an inline validation measurement
     bool validating_inline = 11;
 
-    // Machine is disabled due to a pending shutdown or fatal error.
+    // Controller is disabled due to a pending shutdown or fatal error.
     bool disabled = 15;
 }
 
 
+//==============================================================================
 // A `Signal` message is a multiplexer for various event types from the server,
 // streamed back to the client in response to a `watch()` invocation, above.
 // The event stream continues indefinitely until the client cancels the call or
@@ -244,9 +227,6 @@ message Signal
     {
         // Overall operational status. Emitted on any change.
         OperationalStatus op_status = 8;
-
-        // Machine status. Emitted on an change.
-        MachineStatus machine_status = 9;
 
         // Job status.  Emitted upon change, and once per second during a run.
         JobStatus job_status = 10;
