@@ -11,6 +11,7 @@ package picarro.sam.foup;
 import "google/protobuf/empty.proto";
 import "google/protobuf/duration.proto";
 import "google/protobuf/timestamp.proto";
+import "status.proto";          // Event
 import "signal.proto";          // Signal filter for the `watch()` method
 import "version.proto";         // Common version structure
 
@@ -66,8 +67,8 @@ enum APILevel
     option allow_alias = true;
     APILEVEL_UNINITIALIZED = 0;
     APILEVEL_MAJOR = 0;         // Increment this if breaking changes are introduced
-    APILEVEL_MINOR = 1;         // Increment this for backwards compatible interface changes
-    APILEVEL_TWEAK = 2;         // Increment this when a change is backwards and forwards compatible
+    APILEVEL_MINOR = 2;         // Increment this for backwards compatible interface changes
+    APILEVEL_TWEAK = 1;         // Increment this when a change is backwards and forwards compatible
 }
 
 
@@ -126,8 +127,14 @@ message JobResult
     uint64 job_id = 1;
     string foup_id = 2;
     ActionType action = 4;
+    JobState state = 5;
     google.protobuf.Timestamp endtime = 7;
-    ConcentrationMap concentrations = 15;
+
+    oneof result
+    {
+        picarro.status.Event failure = 14;
+        ConcentrationMap concentrations = 15;
+    }
 }
 
 enum JobState
@@ -232,6 +239,6 @@ message Signal
         JobStatus job_status = 10;
 
         // Job results. Emitted once a job has completed successfully.
-        JobResult job_results = 11;
+        JobResult job_result = 11;
     }
 }
