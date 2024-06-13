@@ -241,7 +241,7 @@ Follow the instructions the [gRPC-UI GitHub page](https://github.com/fullstoryde
 
 This will bring an interactive gRPC request builder in your default web browser.
 
-**Caveat:** gRPC-UI does not seem to handle continuous sever streams, so is not a suitable tool for the `watch()` method.
+**Caveat:** gRPC-UI does not seem to handle continuous server streams, so is not a suitable tool for the `watch()` method.
 
 
 #### Example: Start a FOUP measurement
