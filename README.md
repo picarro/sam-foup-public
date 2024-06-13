@@ -229,6 +229,32 @@ From here, you will see a number of service methods and associated ProtoBuf data
 **Tip**: Use Python's `help()` function for documentation and calling syntax.  For instance, use `help(foup)` to get a list of available methods in the `foup` instance.
 
 
+### Web UI
+
+Picarro Edge is built with support for [gRPC reflection](https://grpc.io/docs/guides/reflection/), and is therefore accesible with tools such as [gRPC-UI](https://www.fullstory.com/blog/grpcui-dont-grpc-without-it/).
+
+Follow the instructions the [gRPC-UI GitHub page](https://github.com/fullstorydev/grpcui) to install this tool, then launch it as follows:
+
+  ```bash
+  $ ~/go/bin/grpcui -plaintext localhost:3343
+  ```
+
+This will bring an interactive gRPC request builder in your default web browser.
+
+**Caveat:** gRPC-UI does not seem to handle continuous sever streams, so is not a suitable tool for the `watch()` method.
+
+
+#### Example: Start a FOUP measurement
+
+To launch a new measurement:
+
+* From the drop-down list near the top, select `picarro.sam.foup.FOUP`
+* Among the available methods just under this service name, choose `start_job`
+* Check `action [ ]` and then choose `ACTION_MEAUSURE_1`
+* Check `foup_id [ ]` and type in a unique FOUP ID
+* Check `duration [ ]` and select a duration, e.g. 1 minute.
+
+
 
 Questions? Comments? Concerns?
 ------------------------------
