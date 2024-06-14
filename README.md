@@ -93,9 +93,9 @@ Use the `--help` option for any of these commands for detailed usage, or `--help
 
 To check basic client/server connectivity using the provided `foup-api-tool`, use
 
-    ```shell
-    $ /opt/picarro/bin/foup-api-tool get_info
-    ```
+  ```shell
+  $ /opt/picarro/bin/foup-api-tool get_info
+  ```
 
 This will report the API versions used by the test client and the server, as well as the server name (executable name).
 
@@ -104,9 +104,9 @@ This will report the API versions used by the test client and the server, as wel
 
 To start a passive listener for events from the **FOUP** service (see the `Signal` message in [foup.proto](proto/foup.proto)), run
 
-    ```shell
-    $ /opt/picarro/bin/foup-api-tool monitor
-    ```
+  ```shell
+  $ /opt/picarro/bin/foup-api-tool monitor
+  ```
 
 This will print out any events that it receives back to your terminal.  Press ENTER to stop and exit the program.
 
@@ -137,9 +137,9 @@ Launching a FOUP job requires three arguments:
 
 For example, the following will perform a 90-second measurement:
 
-    ```shell
-    $ /opt/picarro/bin/foup-api-tool start_job MEASURE_1 "My First Foup" 90
-    ```
+  ```shell
+  $ /opt/picarro/bin/foup-api-tool start_job MEASURE_1 "My First Foup" 90
+  ```
 
 A unique Run ID will be printed on the terminal, which you can later use to abort the run or obtain results.
 
@@ -150,9 +150,9 @@ If you are monitoring FOUP events as per above you will see the job progress und
 
 While underway, a measurement can be cancelled using
 
-    ```shell
-    $ /opt/picarro/bin/foup-api-tool abort_job RUN_ID
-    ```
+  ```shell
+  $ /opt/picarro/bin/foup-api-tool abort_job RUN_ID
+  ```
 
 where `RUN_ID` is the ID that was returned from the `start_job` command above.
 
@@ -160,9 +160,9 @@ where `RUN_ID` is the ID that was returned from the `start_job` command above.
 
 To obtain results from a previously completed job, use
 
-    ```shell
-    $ /opt/picarro/bin/foup-api-tool get_results RUN_ID
-    ```
+  ```shell
+  $ /opt/picarro/bin/foup-api-tool get_results RUN_ID
+  ```
 
 where `RUN_ID` is the ID that was returned from the `start_job` command above.
 
