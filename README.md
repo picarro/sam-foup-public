@@ -4,7 +4,7 @@ Getting Started
 Contents
 --------
 
-This repository contains Picarro software components that are shared with Brooks Automation as part of the SAM FOUP project.  This includes:
+This repository contains Picarro software components that are shared with collaborators as part of the SAM FOUP project. This includes:
 
 * [proto](proto): gRPC/ProtoBuf Interface Definition files.
 * [releases](releases): Installable Debian package, `picarro-sam`.
