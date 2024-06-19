@@ -50,17 +50,31 @@ message Signal
 
     oneof signal
     {
-        // Raw message received over PicarroMQ from SAM core.
-        // Data model varies across topics or even within topics;
-        // for instance, time representations are not standarized.
-        // Useful mainly for debugging.
+        // Raw message received over PicarroMQ from SAM core.  Data model varies
+        // across topics or even within topics; for instance, time
+        // representations are not standarized.  Useful mainly for debugging.
+        //
         // * `mapping_action` is fixed as MAP_UPDATE
         // * `mapping_key` contains the PicarroMQ message topic
+        //
+        // This event is not ached on the server side.
         picarro.variant.Value raw = 8;
+
+        // Analyzer driver started.
+        // * `mapping_action` is fixed as MAP_ADDITION.
+        // * `mapping_key` indicates analyzer identity, e.g. `"Picarro_9038-NUV1083"`.
+        //
+        // This signal is not cached on the server side.  However, when emitted
+        // it implicitly removes any existing `analyzer_health` mappings, below,
+        // on the assumption that they are invalidated after a SAM core restart.
+        picarro.status.Event analyzer_driver_started = 14;
 
         // Analyzer health alert.
         // * `mapping_action` indicates whether alarm is added, updated, or removed.
         // * `mapping_key` indicates analyzer identity, e.g. `"Picarro_8008-AMSADS3008"`.
+        //
+        // This signal is cached on the server side, and re-emitted in response
+        // to subsequent `watch()` invocations.
         picarro.status.Event analyzer_health = 15;
     }
 }
