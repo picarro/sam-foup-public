@@ -68,7 +68,7 @@ enum APILevel
     APILEVEL_UNINITIALIZED = 0;
     APILEVEL_MAJOR = 0;         // Increment this if breaking changes are introduced
     APILEVEL_MINOR = 2;         // Increment this for backwards compatible interface changes
-    APILEVEL_TWEAK = 1;         // Increment this when a change is backwards and forwards compatible
+    APILEVEL_TWEAK = 2;         // Increment this when a change is backwards and forwards compatible
 }
 
 
