@@ -115,13 +115,13 @@ This will print out any events that it receives back to your terminal.  Press EN
 
 #### Monitoring Instrument Health Events
 
-Similarly, to start a passive listener for events from the **Controller** service (see the `Signal` message in [controller.proto](proto/controller.proto)), use:
+Similarly, to start a passive listener for `analyzer_health` and `analyzer_driver` events from the **Controller** service (see the `Signal` message in [controller.proto](proto/controller.proto)), use:
 
   ```shell
-  $ /opt/picarro/bin/controller-api-tool monitor analyzer_health
+  $ /opt/picarro/bin/controller-api-tool monitor analyzer_health analyzer_driver
   ```
 
-  (You can omit the `analyzer_health` keyword to stream additional events from the Controller service, though this will be noisy).
+  (You can omit the `analyzer_health` and `analyzer_driver` keywords to stream additional events from the Controller service, though this will be noisy).
 
 
 #### Starting a FOUP measurement
@@ -217,14 +217,14 @@ From here, you will see a number of service methods and associated ProtoBuf data
   >>> foup.start_notify_signals(protobuf.utils.print_messsage)
   ```
 
-* To start a job, use `foupc.start_job()`:
+* To start a job, use `foup.start_job()`:
 
   ```python
   >>> foup.start_job(action=picarro.sam.foup.ACTION_MEASURE_1, foup_id="My Foup", duration=90)
   ```
 
 
-**Tip**: Use Pythons's interactive command line completion to list available completions at various points.  For instance, once you have typed `foup.start_job(action=picarro.sam.foup.ACTION_`, press **[TAB]** twice to show a list of possible completions for the word `ACTION_`.
+**Tip**: Use Pythons's interactive command line completion to list available completions at various points.  For instance, once you have typed `foup.start_job(action=picarro.sam.foup.ACTION_`, press **[TAB]** twice to show a list of possible completions starting with `ACTION_`.
 
 **Tip**: Use Python's `help()` function for documentation and calling syntax.  For instance, use `help(foup)` to get a list of available methods in the `foup` instance.
 
