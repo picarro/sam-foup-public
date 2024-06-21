@@ -62,7 +62,7 @@ enum APILevel
 {
     // The values below are used by peers to construct their API version,
     // i.e. indicate against which version of this file they were built.
-    // Clients can request the server's version using `get_api_version()` above.
+    // Clients can request the server's version using `get_service_info()` above.
 
     option allow_alias = true;
     APILEVEL_UNINITIALIZED = 0;
