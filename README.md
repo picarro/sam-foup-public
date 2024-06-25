@@ -31,7 +31,7 @@ Python client modules are also included and can be run from any OS with Python 3
 Installing the `picarro-sam` Debian package
 -------------------------------------------
 
-To install the release on your sysem, open a Terminal window and type the following command (replace `VERSION` as appropriate):
+After downloading the current `.deb` file from the [releases](releases) folder, open a Terminal window and type the following command (replace `VERSION` as appropriate):
 
   ```shell
   sudo dpkg -i releases/picarro-sam-VERSION.deb
@@ -282,7 +282,7 @@ You can use the [Package Installer for Python](https://pypi.org/project/pip/) (P
    If you wish to connect to a Picarro Edge server running on another host, use:
 
    ```bash
-   python -i -m picarro.sam.shell --host ADDRESS
+   python -i -m picarro.sam.shell --host=ADDRESS
    ```
 
    (Replace `ADDRESS` with the resolvable name or IP address of the remote host).
@@ -290,18 +290,18 @@ You can use the [Package Installer for Python](https://pypi.org/project/pip/) (P
 
 #### Launch modules directly from wheel
 
-Alternatively, you can load modules from the wheel without installing it.  To do so, launch your OS native Python interpreter but with the environment variable `PYTHONPATH` pointing to the `.whl` file (again, replacing its path and host address as appropriate):
+Alternatively, you can load modules from the wheel without installing it.  To do so, launch your OS native Python interpreter but with the environment variable `PYTHONPATH` pointing to the `.whl` file (again, modifiying the path and the optional `--host` argument as appropriate):
 
    ```bash
    PYTHONPATH=$HOME/Downloads/picarro_sam-VERSION-py3-none-any.whl \
-      python3 -i -m picarro.sam.shell --host ADDRESS
+      python3 -i -m picarro.sam.shell --host=ADDRESS
    ```
 
 or
 
    ```bash
    export PYTHONPATH=$HOME/Downloads/picarro_sam-VERSION-py3-none-any.whl
-   python3 -i -m picarro.sam.shell --host ADDRESS
+   python3 -i -m picarro.sam.shell --host=ADDRESS
    ```
 
 
