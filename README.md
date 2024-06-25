@@ -290,7 +290,7 @@ You can use the [Package Installer for Python](https://pypi.org/project/pip/) (P
 
 #### Launch modules directly from wheel
 
-Alternatively, you can load modules from the wheel without installing it.  To do so, launch your OS native Python interpreter but with the environment variable `PYTHONPATH` pointing to the `.whl` file:
+Alternatively, you can load modules from the wheel without installing it.  To do so, launch your OS native Python interpreter but with the environment variable `PYTHONPATH` pointing to the `.whl` file (again, replacing its path as appropriate):
 
    ```bash
    PYTHONPATH=$HOME/Downloads/picarro_sam-VERSION-py3-none-any.whl \
