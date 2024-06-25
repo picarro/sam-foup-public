@@ -7,7 +7,7 @@ Contents
 This repository contains Picarro software components that are shared with collaborators as part of the SAM FOUP project. This includes:
 
 * [proto](proto): gRPC/ProtoBuf Interface Definition files.
-* [releases](releases): Installable Debian package, `picarro-sam`.
+* [releases](releases): Installable packges for Debian as well as Python virtual environments.
 
 
 ### Package Contents
@@ -307,7 +307,7 @@ or
 
 ### Web UI
 
-Picarro Edge is built with support for [gRPC reflection](https://grpc.io/docs/guides/reflection/), and is therefore accesible with tools such as [gRPC-UI](https://www.fullstory.com/blog/grpcui-dont-grpc-without-it/).
+Picarro Edge is built with support for [gRPC reflection](https://grpc.io/docs/guides/reflection/), and is therefore accessible with tools such as [gRPC-UI](https://www.fullstory.com/blog/grpcui-dont-grpc-without-it/).
 
 Follow the instructions the [gRPC-UI GitHub page](https://github.com/fullstorydev/grpcui) to install this tool, then launch it as follows:
 
