@@ -222,7 +222,7 @@ From here, you will see a number of service methods and associated ProtoBuf data
   For instance, to print events to your terminal, use:
 
   ```python
-  >>> foup.start_notify_signals(protobuf.utils.print_messsage)
+  >>> foup.start_notify_signals(picarro.protobuf.utils.print_messsage)
   ```
 
 * To start a job, use `foup.start_job()`:
