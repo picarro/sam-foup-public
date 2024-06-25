@@ -176,6 +176,12 @@ Various Python gRPC client modules are installed under the standard Python 3.x m
 *  `picarro/sam/foup/grpc/client.py`: control and monitor measurements via the `FOUP` service
 *  `picarro/sam/controller/grpc/client.py`: monitor SAM Core events including health alerts
 
+These modules require that the `python3-grpcio` and `python3-protobuf`packages be installed on the system.  To do so, run the following:
+
+  ```bash
+  sudo apt install python3-grpcio python3-protobuf
+  ```
+
 #### SAM Shell
 
 An interative Python shell with preloaded gRPC modules can be launched using the `samshell` command:
@@ -288,7 +294,6 @@ Alternatively, you can load modules from the wheel without installing it.  To do
    PYTHONPATH=$HOME/Downloads/picarro_sam-VERSION-py3-none-any.whl \
       python3 -i -m picarro.sam.shell
    ```
-
 
 ### Web UI
 
