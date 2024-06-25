@@ -34,7 +34,7 @@ Installing the `picarro-sam` Debian package
 After downloading the current `.deb` file from the [releases](releases) folder, open a Terminal window and type the following command (replace `VERSION` as appropriate):
 
   ```shell
-  sudo dpkg -i releases/picarro-sam-VERSION.deb
+  sudo dpkg -i releases/picarro-sam-VERSION-amd64.deb
   ```
 
 (The `sudo` command is used to gain `root` privileges in order to run the `dpkg` utility).
@@ -42,7 +42,7 @@ After downloading the current `.deb` file from the [releases](releases) folder, 
 The first time you run this command it may fail due to missing runtime dependencies.  In this case, try again using the following command to automatically retrieve and install those:
 
   ```shell
-  sudo apt -y install ./releases/picarro-sam-VERSION.deb
+  sudo apt -y install ./releases/picarro-sam-VERSION-amd64.deb
   ```
 
 (Note that the leading `./` is required for the `apt` tool to recognize this as a local filename, rather than a package name to be retrieved from your Debian/Ubuntu repository).
