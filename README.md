@@ -23,7 +23,9 @@ The package also includes command-line utilities and Python modules to interact 
 Runtime Environment
 -------------------
 
-Installing and running the software in this repository requires a recent version of Linux ([Debian 12](https://www.debian.org/distrib/), [Ubuntu 24.04](https://ubuntu.com/download/desktop), or newer).
+Installing and running the Edge server as well as the command-line tools requires a recent version of Linux ([Debian 12](https://www.debian.org/distrib/), [Ubuntu 24.04](https://ubuntu.com/download/desktop), or newer).
+
+Python client modules are also included and can be run from any OS with Python 3.9 or newer installed; see the section **Python Package ("wheel")** below.
 
 
 Installing the `picarro-sam` Debian package
