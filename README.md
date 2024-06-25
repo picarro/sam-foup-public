@@ -32,7 +32,7 @@ Installing the `picarro-sam` Debian package
 To install the release on your sysem, open a Terminal window and type the following command (replace `VERSION` as appropriate):
 
   ```shell
-  $ sudo dpkg -i releases/picarro-sam-VERSION.deb
+  sudo dpkg -i releases/picarro-sam-VERSION.deb
   ```
 
 (The `sudo` command is used to gain `root` privileges in order to run the `dpkg` utility).
@@ -40,7 +40,7 @@ To install the release on your sysem, open a Terminal window and type the follow
 The first time you run this command it may fail due to missing runtime dependencies.  In this case, try again using the following command to automatically retrieve and install those:
 
   ```shell
-  $ sudo apt -y install ./releases/picarro-sam-VERSION.deb
+  sudo apt -y install ./releases/picarro-sam-VERSION.deb
   ```
 
 (Note that the leading `./` is required for the `apt` tool to recognize this as a local filename, rather than a package name to be retrieved from your Debian/Ubuntu repository).
@@ -54,16 +54,16 @@ By default you do not need to do anything, as `picarro-edge` is installed and st
 If you prefer to run it interactively, for instance to see log messages printed to your terminal, run the following:
 
   ```shell
-  $ sudo systemctl stop picarro-edge      # Stop the service
-  $ sudo systemctl disable picarro-edge   # Keep it from automatically launching at boot
-  $ /opt/picarro/sbin/picarro-edge        # Launch Edge in the foreground
+  sudo systemctl stop picarro-edge      # Stop the service
+  sudo systemctl disable picarro-edge   # Keep it from automatically launching at boot
+  /usr/sbin/picarro-edge                # Launch Edge in the foreground
   ```
 
 If you later wish to re-enable the system service, use the following:
 
   ```shell
-  $ sudo systemctl enable /opt/picarro/lib/systemd/system/picarro-edge.service
-  $ sudo systemctl start picarro-edge
+  sudo systemctl enable picarro-edge
+  sudo systemctl start picarro-edge
   ```
 
 #### A note on simulation
@@ -82,9 +82,9 @@ Interacting with the server
 
 The following command-line tools are provided to interact with the corresponding gRPC services:
 
-* `/opt/picarro/bin/foup-api-tool` to control and monitor measurements via the `FOUP` service
-* `/opt/picarro/bin/crds-api-tool` to retrieve detailed CRDS measurement data (not available in simulation mode)
-* `/opt/picarro/bin/controller-api-tool` to monitor SAM Core events including health alerts (no events in simulation mode)
+* `foup-api-tool` to control and monitor measurements via the `FOUP` service
+* `crds-api-tool` to retrieve detailed CRDS measurement data (not available in simulation mode)
+* `controller-api-tool` to monitor SAM Core events including health alerts (no events in simulation mode)
 
 Use the `--help` option for any of these commands for detailed usage, or `--help commands` for a shorter synopsis of available subcommands.
 
@@ -94,7 +94,7 @@ Use the `--help` option for any of these commands for detailed usage, or `--help
 To check basic client/server connectivity using the provided `foup-api-tool`, use
 
   ```shell
-  $ /opt/picarro/bin/foup-api-tool get_info
+  foup-api-tool get_info
   ```
 
 This will report the API versions used by the test client and the server, as well as the server name (executable name).
@@ -105,7 +105,7 @@ This will report the API versions used by the test client and the server, as wel
 To start a passive listener for events from the **FOUP** service (see the `Signal` message in [foup.proto](proto/foup.proto)), run
 
   ```shell
-  $ /opt/picarro/bin/foup-api-tool monitor
+  foup-api-tool monitor
   ```
 
 This will print out any events that it receives back to your terminal.  Press ENTER to stop and exit the program.
@@ -118,7 +118,7 @@ This will print out any events that it receives back to your terminal.  Press EN
 Similarly, to start a passive listener for `analyzer_health` and `analyzer_driver` events from the **Controller** service (see the `Signal` message in [controller.proto](proto/controller.proto)), use:
 
   ```shell
-  $ /opt/picarro/bin/controller-api-tool monitor analyzer_health analyzer_driver
+  controller-api-tool monitor analyzer_health analyzer_driver
   ```
 
   (You can omit the `analyzer_health` and `analyzer_driver` keywords to stream additional events from the Controller service, though this will be noisy).
@@ -138,7 +138,7 @@ Launching a FOUP job requires three arguments:
 For example, the following will perform a 90-second measurement:
 
   ```shell
-  $ /opt/picarro/bin/foup-api-tool start_job MEASURE_1 "My First Foup" 90
+  foup-api-tool start_job MEASURE_1 "My First Foup" 90
   ```
 
 A unique Run ID will be printed on the terminal, which you can later use to abort the run or obtain results.
@@ -151,7 +151,7 @@ If you are monitoring FOUP events as per above you will see the job progress und
 While underway, a measurement can be cancelled using
 
   ```shell
-  $ /opt/picarro/bin/foup-api-tool abort_job RUN_ID
+  foup-api-tool abort_job RUN_ID
   ```
 
 where `RUN_ID` is the ID that was returned from the `start_job` command above.
@@ -161,7 +161,7 @@ where `RUN_ID` is the ID that was returned from the `start_job` command above.
 To obtain results from a previously completed job, use
 
   ```shell
-  $ /opt/picarro/bin/foup-api-tool get_results RUN_ID
+  foup-api-tool get_results RUN_ID
   ```
 
 where `RUN_ID` is the ID that was returned from the `start_job` command above.
@@ -169,24 +169,19 @@ where `RUN_ID` is the ID that was returned from the `start_job` command above.
 
 ### Python client modules
 
-**NOTE**: The steps below require that the `python3-grpcio` package has been installed. This means you can run them from the ["Develop"](../../../picarro-shared/docker/develop/), but not from the smaller ["Run"](../../../picarro-shared/docker/run/) (i.e. runtime) image.
-
 #### Client module
 
-Various Python gRPC client modules installed under `/opt/picarro/share/python`. These contain wrapper methods for all of the above service functions. Specifically:
+Various Python gRPC client modules are installed under the standard Python 3.x module folder, `/usr/lib/python3/dist-packages`. These contain wrapper methods for all of the above service functions. Specifically:
 
-*  `/opt/picarro/share/python/sam/foup/grpc/client.py`: control and monitor measurements via the `FOUP` service
-*  `/opt/picarro/share/python/sam/controller/grpc/client.py`: monitor SAM Core events including health alerts
-
-At some point these will  be available separately as an installable [Python wheel](https://pythonwheels.com/). For now, these may be useful as a general reference implementation.
-
+*  `picarro/sam/foup/grpc/client.py`: control and monitor measurements via the `FOUP` service
+*  `picarro/sam/controller/grpc/client.py`: monitor SAM Core events including health alerts
 
 #### SAM Shell
 
 An interative Python shell with preloaded gRPC modules can be launched using the `samshell` command:
 
   ```shell
-  $ /opt/picarro/bin/samshell
+  samshell
 
       Interactive Service Control.  Subsystems loaded:
 
@@ -229,6 +224,67 @@ From here, you will see a number of service methods and associated ProtoBuf data
 **Tip**: Use Python's `help()` function for documentation and calling syntax.  For instance, use `help(foup)` to get a list of available methods in the `foup` instance.
 
 
+### Python package ("Wheel")
+
+The Python client modules are also available in an installable [Python wheel](https://pythonwheels.com/), which allows them to be used in a Python 3.9 or higher environment on any platform. 
+
+After you download the file `picarro_sam-VERSION-py3-none-any.whl` from the [releases](releases) folder onto your system, you have two options.
+
+#### Install the wheel with PIP
+
+You can use the [Package Installer for Python](https://pypi.org/project/pip/) (PIP) to install this wheel, preferably into a [Python Virtual Environment](https://virtualenv.pypa.io/en/latest/user_guide.html).  The steps vary slighly based on your host OS; on a Debian-based system, follow these steps:
+
+1. Install required Python modules:
+
+   ```bash
+   sudo apt install python3-virtualenv python3-pip
+   ```
+
+2. Create a virtual environment.  For this example we'll do so in `$HOME/picarro`:
+
+   ```bash
+   virtualenv $HOME/picarro
+   ```
+
+3. "Activate" this environment. This effectively adjusts your `$PATH` environment variable so that commands like `python` and `pip` are launched from within this environment instead of your system folders:
+
+   ```bash
+   $HOME/picarro/bin/activate
+   ```
+
+   You will need to repeat this command whenever you want to use this environment from a new shell (i.e. Terminal window).
+
+4. Install the wheel within this newly activated environment (replacing its path as appropriate):
+
+   ```bash
+   pip install $HOME/Downloads/picarro_sam-VERSION-py3-none-any.whl
+   ```
+
+5. Launch the `samshell` interactive prompt from within this environment:
+
+   ```bash
+   python -i -m picarro.sam.shell
+   ```
+
+   If you wish to connect to a Picarro Edge server running on another host, use:
+
+   ```bash
+   python -i -m picarro.sam.shell --host ADDRESS
+   ```
+
+   (Replace `ADDRESS` with the resolvable name or IP address of the remote host).
+
+
+#### Launch modules directly from wheel
+
+Alternatively, you can load modules from the wheel without installing it.  To do so, launch your OS native Python interpreter but with the environment variable `PYTHONPATH` pointing to the `.whl` file:
+
+   ```bash
+   PYTHONPATH=$HOME/Downloads/picarro_sam-VERSION-py3-none-any.whl \
+      python3 -i -m picarro.sam.shell
+   ```
+
+
 ### Web UI
 
 Picarro Edge is built with support for [gRPC reflection](https://grpc.io/docs/guides/reflection/), and is therefore accesible with tools such as [gRPC-UI](https://www.fullstory.com/blog/grpcui-dont-grpc-without-it/).
@@ -236,7 +292,7 @@ Picarro Edge is built with support for [gRPC reflection](https://grpc.io/docs/gu
 Follow the instructions the [gRPC-UI GitHub page](https://github.com/fullstorydev/grpcui) to install this tool, then launch it as follows:
 
   ```bash
-  $ ~/go/bin/grpcui -plaintext localhost:3343
+  $HOME/go/bin/grpcui -plaintext localhost:3343
   ```
 
 This will bring an interactive gRPC request builder in your default web browser.
