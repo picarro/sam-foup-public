@@ -7,7 +7,7 @@ Contents
 This repository contains Picarro software components that are shared with collaborators as part of the SAM FOUP project. This includes:
 
 * [proto](proto): gRPC/ProtoBuf Interface Definition files.
-* [releases](releases): Installable packges for Debian as well as Python virtual environments.
+* [releases](releases): Installable Debian packages as well as Python client modules for any platform.
 
 
 ### Package Contents
@@ -25,7 +25,7 @@ Runtime Environment
 
 Installing and running the Edge server as well as the command-line tools requires a recent version of Linux ([Debian 12](https://www.debian.org/distrib/), [Ubuntu 24.04](https://ubuntu.com/download/desktop), or newer).
 
-Python client modules are also included and can be run from any OS with Python 3.9 or newer installed; see the section **Python Package ("wheel")** below.
+Python client modules are also included and can be run from any OS with Python 3.9 or newer installed; see the section [Python Package ("wheel")](#wheel) below.
 
 
 Installing the `picarro-sam` Debian package
@@ -237,7 +237,7 @@ From here, you will see a number of service methods and associated ProtoBuf data
 **Tip**: Use Python's `help()` function for documentation and calling syntax.  For instance, use `help(foup)` to get a list of available methods in the `foup` instance.
 
 
-### Python package ("Wheel")
+### <a name="wheel">Python package ("Wheel")</a>
 
 The Python client modules are also available in an installable [Python wheel](https://pythonwheels.com/), which allows them to be used in a Python 3.9 or higher environment on any platform.
 
