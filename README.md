@@ -239,7 +239,7 @@ From here, you will see a number of service methods and associated ProtoBuf data
 
 ### Python package ("Wheel")
 
-The Python client modules are also available in an installable [Python wheel](https://pythonwheels.com/), which allows them to be used in a Python 3.9 or higher environment on any platform. 
+The Python client modules are also available in an installable [Python wheel](https://pythonwheels.com/), which allows them to be used in a Python 3.9 or higher environment on any platform.
 
 After you download the file `picarro_sam-VERSION-py3-none-any.whl` from the [releases](releases) folder onto your system, you have two options.
 
@@ -296,6 +296,14 @@ Alternatively, you can load modules from the wheel without installing it.  To do
    PYTHONPATH=$HOME/Downloads/picarro_sam-VERSION-py3-none-any.whl \
       python3 -i -m picarro.sam.shell
    ```
+
+or
+
+   ```bash
+   PYTHONPATH=$HOME/Downloads/picarro_sam-VERSION-py3-none-any.whl \
+      python3 -i -m picarro.sam.shell --host ADDRESS
+   ```
+
 
 ### Web UI
 
