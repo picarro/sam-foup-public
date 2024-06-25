@@ -182,6 +182,11 @@ An interative Python shell with preloaded gRPC modules can be launched using the
 
   ```shell
   samshell
+  ```
+
+You should see a brief legend with an interative Python prompt:
+
+   ```shell
 
       Interactive Service Control.  Subsystems loaded:
 
@@ -193,17 +198,17 @@ An interative Python shell with preloaded gRPC modules can be launched using the
       ProtoBuf types are generally loaded into namespaces matching the package
       names from their respective `.proto` files:
 
-          google.protobuf - Well-known types from Google
-          picarro.*       - Picarro custom types
-          picarro.sam.*   - Custom types specific to SAM
-          protobuf.*      - General utilities and wrapper modules
+          google.protobuf    - Well-known types from Google
+          picarro.*          - Picarro modules
+          picarro.sam.*      - Custom types specific to SAM
+          picarro.protobuf.* - General utilities and wrapper modules
 
       Use 'help(subsystem)' to list available methods
 
   >>>
   ```
 
-From here, you will see a number of service methods and associated ProtoBuf data types - for instance, top-level `foup` instance of the `Client()` class above.
+From here, you will see a number of service methods and associated ProtoBuf data types - for instance, a top-level `foup` instance of the `FOUP.Client()` class above.
 
 * To monitor service events, use `foup.start_notify_signals(CALLBACK)`.
   For instance, to print events to your terminal, use:
