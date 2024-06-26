@@ -37,7 +37,7 @@ After downloading the current `.deb` file from the [releases](releases) folder, 
   sudo apt -y install ./releases/picarro-sam-VERSION-amd64.deb
   ```
 
-The `sudo` command is used to gain `root` privileges in order to run the `dpkg` utility.
+The `sudo` command is used to gain `root` privileges in order to run the `apt` utility.
 
 (Note that the leading `./` is required for the `apt` tool to recognize this as a local filename, rather than a package name to be retrieved from your Debian/Ubuntu repository).
 
