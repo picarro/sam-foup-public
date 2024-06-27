@@ -87,10 +87,10 @@ enum ActionType
     ACTION_MEASURE_2          = 2; // Measuring from inlet #2
     ACTION_BG_CORRECT         = 3; // Background correction
     ACTION_AMBIENT            = 4; // Ambient air measurement
-    ACTION_INLINE_1           = 5;
-    ACTION_INLINE_2           = 6;
-    ACTION_INLINE_3           = 7;
-    ACTION_INLINE_4           = 8;
+    ACTION_INLINE_1           = 5; // Inline validation: IPA
+    ACTION_INLINE_2           = 6; // Inline validation: CH4 (proxy for HCl)
+    ACTION_INLINE_3           = 7; // Inline validation: O2 (proxy for HF)
+    ACTION_INLINE_4           = 8; // Inline validation: CO2 (proxy for NH3)
 
 }
 
