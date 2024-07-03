@@ -62,7 +62,7 @@ If you later wish to re-enable the system service, use the following:
   sudo systemctl start picarro-edge
   ```
 
-#### A note on simulation
+### A note on simulation
 
 By default, Edge runs in simulation mode, with the following caveats:
  * **FOUP** control functions are available, and will trigger corresponding `op_status`, `job_status`, and `job_result` messages as the run progresses
@@ -74,6 +74,8 @@ By default, Edge runs in simulation mode, with the following caveats:
 Interacting with the server
 ---------------------------
 
+By default, `picarro-edge` accepts incoming plaintext ("insecure") gRPC client connections on **TCP port 3343**.  The following are some ways in which you may interact with it.
+
 ### Command Line Tools
 
 The following command-line tools are provided to interact with the corresponding gRPC services:
@@ -82,7 +84,19 @@ The following command-line tools are provided to interact with the corresponding
 * `crds-api-tool` to retrieve detailed CRDS measurement data (not available in simulation mode)
 * `controller-api-tool` to monitor SAM Core events including health alerts (no events in simulation mode)
 
-Use the `--help` option for any of these commands for detailed usage, or `--help commands` for a shorter synopsis of available subcommands.
+By default these tools communicate with `picarro-edge` on `localhost`. If you wish to connect to a remote server instance, use the `--host` option:
+
+  ```shell
+  foup-api-tool --host=ADDRESS COMMAND ....
+  ```
+
+Replace `ADDRESS` with any of the following:
+
+ * A resolvable name, e.g. `servername.local`
+ * An IPv4 ("IP") address in "dotted quad" format, e.g. `192.168.0.1`
+ * An IPv6 address enclosed in square brackets, e.g. `[fe80::bad:food:dead:beef]`
+
+Use the `--help` option with any of these commands for detailed usage, or `--help commands` for a shorter synopsis of available subcommands.
 
 
 #### Basic connectivity check
@@ -94,6 +108,7 @@ To check basic client/server connectivity using the provided `foup-api-tool`, us
   ```
 
 This will report the API versions used by the test client and the server, as well as the server name (executable name).
+
 
 
 #### Monitoring FOUP Events

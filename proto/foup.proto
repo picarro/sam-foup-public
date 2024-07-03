@@ -178,7 +178,7 @@ enum OperationalState
     OP_CALIBRATING_BACKGROUND = 4; // System is performing background calibration
     OP_CALIBRATING_AMBIENT    = 5; // System is measuring ambient air
     OP_VALIDATING_INLINE      = 6; // System is performing an inline validation
-    OP_DISABLED               = 9; // System is disabled (fatal error or shutdown)
+    OP_DISABLED               = 9; // System is disabled (critical error or shutdown)
 }
 
 message OperationalFlags
@@ -210,7 +210,7 @@ message OperationalFlags
     // Controller is performing an inline validation measurement
     bool validating_inline = 11;
 
-    // Controller is disabled due to a pending shutdown or fatal error.
+    // Controller is disabled due to a pending shutdown or critical error.
     bool disabled = 15;
 }
 
