@@ -94,7 +94,7 @@ Replace `ADDRESS` with any of the following:
 
  * A resolvable name, e.g. `servername.local`
  * An IPv4 ("IP") address in "dotted quad" format, e.g. `192.168.0.1`
- * An IPv6 address enclosed in square brackets, e.g. `[fe80::bad:food:dead:beef]`
+ * An IPv6 address enclosed in square brackets, e.g. `[fe80::bad:f00d:dead:beef]`
 
 Use the `--help` option with any of these commands for detailed usage, or `--help commands` for a shorter synopsis of available subcommands.
 
